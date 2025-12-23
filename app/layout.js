@@ -1,17 +1,17 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Inter } from "next/font/google";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/**
+ * ✅ Next.js 14 SAFE FONT
+ * Geist ❌ (Next 15+ only)
+ * Inter ✅ (Stable)
+ */
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-/* ✅ SINGLE METADATA EXPORT — THIS IS IMPORTANT */
+/* ✅ SINGLE METADATA EXPORT */
 export const metadata = {
   title: "Business Ranking AI – Check Your Google Visibility",
   description:
@@ -24,7 +24,7 @@ export const metadata = {
     "seo audit tool",
     "website ranking check",
     "local seo tool",
-    "business seo analysis"
+    "business seo analysis",
   ],
 
   metadataBase: new URL("https://business-ranking-ai.vercel.app"),
@@ -35,19 +35,19 @@ export const metadata = {
     url: "https://business-ranking-ai.vercel.app",
     siteName: "Business Ranking AI",
     locale: "en_IN",
-    type: "website"
+    type: "website",
   },
 
   robots: {
     index: true,
-    follow: true
-  }
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={inter.variable}>
         {children}
       </body>
     </html>
