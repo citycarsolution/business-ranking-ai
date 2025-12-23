@@ -1,156 +1,110 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { calculateScore, calculateRisk } from "@/app/lib/score";
 
 export default function Dashboard() {
-  const router = useRouter();
-  const [status, setStatus] = useState("loading"); // loading | active | expired | inactive
-  const [daysLeft, setDaysLeft] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
 
-  // 🔐 Check login + fetch status
-  useEffect(() => {
-    const email = localStorage.getItem("br_email");
+  const check = async () => {
+    setError("");
+    setData(null);
+
     if (!email) {
-      router.push("/login");
+      setError("Email required");
       return;
     }
 
-    fetch("/api/status", {
+    const res = await fetch("/api/status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "active") {
-          setStatus("active");
-          const days = Math.ceil(
-            (data.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)
-          );
-          setDaysLeft(days);
-        } else {
-          setStatus(data.status);
-        }
-      });
-  }, [router]);
-
-  // 🔁 Renew / Extend plan
-  const renewPlan = async () => {
-    const email = localStorage.getItem("br_email");
-    if (!email) return;
-
-    setLoading(true);
-
-    const res = await fetch("/api/renew", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email })
     });
 
-    const data = await res.json();
-
-    if (data.status === "renewed") {
-      const days = Math.ceil(
-        (data.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)
-      );
-      setStatus("active");
-      setDaysLeft(days);
-      alert("✅ SEO support extended by 30 days");
-    }
-
-    setLoading(false);
+    const d = await res.json();
+    setData(d);
   };
 
-  // 🚪 Logout (optional utility)
-  const logout = () => {
-    localStorage.removeItem("br_email");
-    router.push("/login");
-  };
+  const daysLeft =
+    data?.expiresAt
+      ? Math.ceil((data.expiresAt - Date.now()) / 86400000)
+      : 0;
+
+  const score = data?.actions ? calculateScore(data.actions.length) : 0;
+  const risk = data?.actions ? calculateRisk(data.actions.length) : "";
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full bg-white shadow-xl rounded-2xl p-8">
+    <main className="max-w-3xl mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-1">SEO Dashboard</h1>
+      <p className="text-gray-600 mb-6">
+        Monitor your business visibility & SEO health
+      </p>
 
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">
-            SEO Status:{" "}
-            {status === "active" ? (
-              <span className="text-green-600">ACTIVE</span>
-            ) : status === "expired" ? (
-              <span className="text-red-600">EXPIRED</span>
-            ) : (
-              <span className="text-gray-500">INACTIVE</span>
-            )}
-          </h1>
+      <input
+        className="border px-4 py-3 w-full rounded"
+        placeholder="Enter your payment email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+      />
 
-          <button
-            onClick={logout}
-            className="text-sm text-gray-500 underline"
-          >
-            Logout
-          </button>
+      {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+
+      <button
+        onClick={check}
+        className="mt-4 bg-black text-white px-6 py-3 rounded"
+      >
+        Check Status
+      </button>
+
+      {data && data.status !== "active" && (
+        <div className="mt-6 bg-red-100 border p-4 rounded">
+          ❌ SEO support not active.
+          <a href="/upgrade" className="ml-2 underline font-semibold">
+            Upgrade now
+          </a>
         </div>
+      )}
 
-        {/* ACTIVE STATE */}
-        {status === "active" && (
-          <>
-            <p className="mt-2 text-gray-600">
-              SEO Support is active. Expires in{" "}
-              <b>{daysLeft}</b> day{daysLeft === 1 ? "" : "s"}.
-            </p>
+      {data && data.status === "active" && (
+        <div className="mt-8 space-y-6">
 
-            <div className="mt-6 bg-gray-100 rounded-lg p-4 text-sm">
-              <p><b>Plan:</b> Pro</p>
-              <p><b>Keywords:</b> Unlimited</p>
-              <p><b>Support:</b> Active</p>
+          <div className="border p-5 rounded bg-gray-50">
+            <p><b>Status:</b> ACTIVE</p>
+            <p><b>Days Left:</b> {daysLeft}</p>
+            <p><b>SEO Score:</b> {score} / 100</p>
+            <p><b>SEO Risk:</b> {risk}</p>
+          </div>
+
+          {daysLeft <= 7 && (
+            <div className="bg-yellow-100 border p-4 rounded">
+              ⚠️ SEO support expires in {daysLeft} days.
+              <a href="/upgrade" className="ml-2 underline font-semibold">
+                Renew now
+              </a>
             </div>
+          )}
 
-            {/* 🔁 OPTIONAL EXTEND FOR ACTIVE USER */}
-            <button
-              onClick={renewPlan}
-              disabled={loading}
-              className="mt-6 bg-black text-white px-5 py-3 rounded-lg font-semibold"
-            >
-              {loading ? "Extending..." : "Extend Support by 30 Days"}
-            </button>
-          </>
-        )}
+          <div>
+            <h2 className="text-xl font-bold mb-3">
+              🔧 Action Plan
+            </h2>
 
-        {/* EXPIRED STATE */}
-        {status === "expired" && (
-          <div className="mt-6">
-            <p className="text-red-600">
-              Your SEO support has expired.
-            </p>
-
-            <button
-              onClick={renewPlan}
-              disabled={loading}
-              className="mt-4 bg-black text-white px-5 py-3 rounded-lg font-semibold"
-            >
-              {loading ? "Renewing..." : "Renew for 30 Days"}
-            </button>
+            {data.actions.map((a, i) => (
+              <div key={i} className="bg-gray-100 p-4 rounded mb-3">
+                <p className="font-semibold">{i + 1}. {a.title}</p>
+                <p className="text-sm text-gray-700">{a.detail}</p>
+              </div>
+            ))}
           </div>
-        )}
 
-        {/* INACTIVE / NO PAYMENT */}
-        {status === "inactive" && (
-          <div className="mt-6">
-            <p className="text-gray-600">
-              No active SEO support found.
-            </p>
-            <a
-              href="/upgrade"
-              className="inline-block mt-4 bg-black text-white px-5 py-3 rounded-lg font-semibold"
-            >
-              Upgrade Plan
-            </a>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      <p className="mt-10 text-xs text-center text-gray-500">
+        Manual review · No auto billing · Business-safe SEO
+      </p>
     </main>
   );
 }

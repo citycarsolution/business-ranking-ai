@@ -1,43 +1,31 @@
-"use client";
-import { useRouter } from "next/navigation";
-
 export default function Upgrade() {
-  const router = useRouter();
-
-  const choose = (plan) => {
-    localStorage.setItem("br_plan", plan);
-    router.push("/pay");
-  };
-
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full bg-white p-8 rounded-xl shadow">
+    <main className="p-10 max-w-3xl mx-auto">
+      <h1 className="text-3xl font-bold text-center">Upgrade SEO Support</h1>
 
-        <h1 className="text-3xl font-bold text-center">Choose Your Plan</h1>
+      <div className="grid md:grid-cols-3 gap-6 mt-8">
+        <div className="border p-4 rounded">
+          <h3>Starter</h3>
+          <p className="text-xl">₹999</p>
+        </div>
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="border-2 border-black p-4 rounded">
+          <h3>Growth</h3>
+          <p className="text-xl">₹1999</p>
+          <p className="text-xs">Most Popular</p>
+        </div>
 
-          <Plan title="Basic" price="₹999" onClick={() => choose("basic")} />
-          <Plan title="Pro" price="₹1999" onClick={() => choose("pro")} />
-          <Plan title="Agency" price="₹2999" onClick={() => choose("agency")} />
-
+        <div className="border p-4 rounded">
+          <h3>Authority</h3>
+          <p className="text-xl">₹2999</p>
         </div>
       </div>
-    </main>
-  );
-}
 
-function Plan({ title, price, onClick }) {
-  return (
-    <div className="border rounded-lg p-5 text-center">
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <p className="text-2xl font-bold mt-2">{price}</p>
-      <button
-        onClick={onClick}
-        className="mt-4 bg-black text-white px-4 py-2 rounded"
-      >
-        Choose
-      </button>
-    </div>
+      <div className="text-center mt-6">
+        <a href="/pay" className="bg-black text-white px-6 py-3 rounded">
+          Continue to Payment →
+        </a>
+      </div>
+    </main>
   );
 }

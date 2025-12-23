@@ -1,15 +1,25 @@
 import fs from "fs";
 import path from "path";
 
-const dbPath = path.join(process.cwd(), "data.json");
+// Absolute path (important for Next.js)
+const DB_PATH = path.join(process.cwd(), "data.json");
+
+// Ensure DB exists
+function ensureDB() {
+  if (!fs.existsSync(DB_PATH)) {
+    fs.writeFileSync(
+      DB_PATH,
+      JSON.stringify({ payments: [] }, null, 2)
+    );
+  }
+}
 
 export function readDB() {
-  if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify({ payments: [] }));
-  }
-  return JSON.parse(fs.readFileSync(dbPath));
+  ensureDB();
+  return JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
 }
 
 export function writeDB(data) {
-  fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+  ensureDB();
+  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 }

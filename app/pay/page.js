@@ -1,39 +1,40 @@
+"use client";
+import { useState } from "react";
+
 export default function Pay() {
+  const [email, setEmail] = useState("");
+  const [txn, setTxn] = useState("");
+
+  const submit = async () => {
+    await fetch("/api/payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, txnId: txn })
+    });
+    alert("Payment submitted. Admin will activate.");
+  };
+
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white shadow-xl rounded-2xl p-8 text-center">
+    <main className="p-10 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Payment</h1>
 
-        <h1 className="text-2xl font-bold">
-          Complete Payment
-        </h1>
+      <img src="/upi-qr.jpg" className="mb-4" />
 
-        <p className="mt-2 text-gray-600">
-          Scan & pay using any UPI app
-        </p>
+      <input
+        className="border px-3 py-2 w-full mb-2"
+        placeholder="Email"
+        onChange={e => setEmail(e.target.value)}
+      />
 
-        <div className="mt-6 border rounded-xl p-4">
-          <img
-            src="/upi-qr.jpg"
-            alt="UPI QR"
-            className="mx-auto w-48"
-          />
-          <p className="mt-2 text-sm text-gray-700">
-            UPI ID: <b>anshs3504@oksbi</b>
-          </p>
-        </div>
+      <input
+        className="border px-3 py-2 w-full mb-4"
+        placeholder="Transaction ID"
+        onChange={e => setTxn(e.target.value)}
+      />
 
-        <a
-          href="/activate"
-          className="block mt-6 bg-black text-white py-3 rounded-lg font-semibold"
-        >
-          I Have Paid
-        </a>
-
-        <p className="mt-4 text-xs text-gray-500">
-          Payment verification may take a few minutes
-        </p>
-
-      </div>
+      <button onClick={submit} className="bg-black text-white px-4 py-2">
+        Submit
+      </button>
     </main>
   );
 }
