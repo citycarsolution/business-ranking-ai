@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function Home() {
+export default function HomePage() {
   const [url, setUrl] = useState("");
   const [keywords, setKeywords] = useState("");
   const [error, setError] = useState("");
@@ -35,30 +35,37 @@ export default function Home() {
 
     setLoading(true);
 
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, keywords: keywordList })
-    });
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, keywords: keywordList })
+      });
 
-    const data = await res.json();
-    setResult(data);
+      const data = await res.json();
+      setResult(data);
+    } catch (e) {
+      setError("Something went wrong. Try again.");
+    }
+
     setLoading(false);
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full bg-white shadow-xl rounded-2xl p-8">
+    <main className="min-h-screen bg-gray-50 px-4 py-10 flex justify-center">
+      <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-8">
 
-        <h1 className="text-3xl md:text-4xl font-bold text-center">
-          Business-Ranking AI
+        {/* HERO */}
+        <h1 className="text-4xl font-bold text-center leading-tight">
+          Free Business Ranking & SEO Checker
         </h1>
 
         <p className="mt-3 text-center text-gray-600">
-          Free SEO & Business Ranking Checker
+          Find out why your website is not ranking on Google and what to fix.
         </p>
 
-        <div className="mt-6 space-y-4">
+        {/* INPUT FORM */}
+        <div className="mt-8 space-y-4">
           <input
             value={url}
             onChange={e => setUrl(e.target.value)}
@@ -87,24 +94,76 @@ export default function Home() {
           </button>
         </div>
 
+        {/* RESULT */}
         {result && (
-          <div className="mt-6 bg-gray-100 rounded-lg p-4 text-sm">
-            <p className="font-semibold mb-2">Free SEO Insight:</p>
+          <div className="mt-8 bg-gray-100 rounded-lg p-5 text-sm">
+            <p className="font-semibold mb-3">Free SEO Insights</p>
+
             <ul className="list-disc pl-5 space-y-1">
               {result.insights.map((i, idx) => (
                 <li key={idx}>{i}</li>
               ))}
             </ul>
 
-            <p className="mt-4 text-blue-700 font-semibold cursor-pointer">
-              🔓 Unlock full SEO support for all keywords →
-            </p>
+            <a
+              href="/upgrade"
+              className="inline-block mt-4 text-blue-700 font-semibold"
+            >
+              🔓 Unlock full SEO support & exact fixes →
+            </a>
           </div>
         )}
 
-        <p className="mt-6 text-xs text-center text-gray-500">
-          No signup required · Free automated check
-        </p>
+        {/* FREE VS PAID (SEO CONTENT BLOCK) */}
+        <section className="mt-12 border-t pt-8">
+          <h2 className="text-2xl font-bold text-center mb-6">
+            Free vs Paid SEO Support
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6 text-sm">
+            <div className="border rounded-xl p-5 bg-gray-50">
+              <h3 className="font-semibold text-lg mb-2">Free Check</h3>
+              <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                <li>Up to 8 keywords</li>
+                <li>Basic SEO signals</li>
+                <li>General insights</li>
+                <li>No action plan</li>
+              </ul>
+            </div>
+
+            <div className="border-2 border-black rounded-xl p-5 bg-white">
+              <h3 className="font-semibold text-lg mb-2">
+                Paid SEO Support
+              </h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Unlimited keywords</li>
+                <li>Exact page-wise fixes</li>
+                <li>Priority keyword focus</li>
+                <li>30-day active support</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <a
+              href="/upgrade"
+              className="inline-block bg-black text-white px-8 py-3 rounded-lg font-semibold"
+            >
+              Upgrade & Fix SEO →
+            </a>
+            <p className="mt-2 text-xs text-gray-500">
+              Starts at ₹999 · No auto billing
+            </p>
+          </div>
+        </section>
+
+        {/* SEO FOOTER CONTENT */}
+        <footer className="mt-12 text-xs text-center text-gray-500 leading-relaxed">
+          Business Ranking AI helps business owners understand Google ranking,
+          SEO issues, website visibility, and growth opportunities.
+          <br />
+          Manual review · Business-safe SEO · No signup required
+        </footer>
 
       </div>
     </main>
