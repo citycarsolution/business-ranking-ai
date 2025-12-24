@@ -7,7 +7,7 @@ const CITY_DATA = {
   mumbai: {
     name: "Mumbai",
     description:
-      "Check business ranking in Mumbai with AI-powered SEO analysis. Track Google visibility, keyword performance, and local SEO strength for Mumbai businesses.",
+      "Check business ranking in Mumbai. Track Google visibility, keyword performance, and local SEO strength for Mumbai businesses.",
   },
   delhi: {
     name: "Delhi",
@@ -22,33 +22,37 @@ const CITY_DATA = {
   bangalore: {
     name: "Bangalore",
     description:
-      "Check Google business ranking in Bangalore. AI-driven SEO insights for startups and local businesses in Bangalore.",
+      "Check Google business ranking in Bangalore. SEO insights for startups and local businesses in Bangalore.",
   },
   hyderabad: {
     name: "Hyderabad",
     description:
-      "Track your business ranking in Hyderabad. Improve SEO, keyword rankings, and Google visibility with AI-powered analysis.",
+      "Track your business ranking in Hyderabad. Improve SEO, keyword rankings, and Google visibility.",
   },
 };
 
 /**
- * SEO METADATA (Dynamic per city)
+ * REQUIRED FOR STATIC BUILD (CRITICAL)
+ */
+export function generateStaticParams() {
+  return Object.keys(CITY_DATA).map((slug) => ({ slug }));
+}
+
+/**
+ * SEO METADATA
  */
 export async function generateMetadata({ params }) {
   const city = CITY_DATA[params.slug];
 
-  if (!city) return {};
+  if (!city) {
+    return {
+      robots: { index: false, follow: false },
+    };
+  }
 
   return {
     title: `Business Ranking in ${city.name} | Business Ranking AI`,
     description: city.description,
-    keywords: [
-      `business ranking ${city.name.toLowerCase()}`,
-      `seo services ${city.name.toLowerCase()}`,
-      `google ranking ${city.name.toLowerCase()}`,
-      "seo checker",
-      "business ranking ai",
-    ],
     openGraph: {
       title: `Business Ranking in ${city.name}`,
       description: city.description,
@@ -76,22 +80,17 @@ export default function CityPage({ params }) {
     <main className="min-h-screen bg-gray-50 px-4 py-12">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
 
-        {/* H1 */}
         <h1 className="text-3xl md:text-4xl font-bold">
           Business Ranking in {city.name}
         </h1>
 
-        {/* Intro */}
         <p className="mt-4 text-gray-700 leading-relaxed">
           {city.description}
         </p>
 
-        {/* Value Points */}
         <div className="mt-6 grid md:grid-cols-2 gap-4">
           <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">
-              Local SEO Insights
-            </h2>
+            <h2 className="font-semibold text-lg">Local SEO Insights</h2>
             <p className="mt-2 text-sm text-gray-600">
               Understand how your business performs in local Google searches in{" "}
               {city.name}.
@@ -99,34 +98,27 @@ export default function CityPage({ params }) {
           </div>
 
           <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">
-              Keyword Ranking Analysis
-            </h2>
+            <h2 className="font-semibold text-lg">Keyword Ranking Analysis</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Track important keywords and see why competitors rank above you.
+              Track important keywords and understand ranking gaps.
             </p>
           </div>
 
           <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">
-              AI SEO Recommendations
-            </h2>
+            <h2 className="font-semibold text-lg">SEO Recommendations</h2>
             <p className="mt-2 text-sm text-gray-600">
               Actionable steps to improve on-page, off-page, and technical SEO.
             </p>
           </div>
 
           <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">
-              Free + Paid Growth Path
-            </h2>
+            <h2 className="font-semibold text-lg">Free + Paid Growth Path</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Start free, then unlock full SEO support for faster growth.
+              Start free, then unlock deeper insights if needed.
             </p>
           </div>
         </div>
 
-        {/* CTA */}
         <div className="mt-10 text-center">
           <a
             href="/"

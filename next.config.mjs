@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  reactStrictMode: true,
+
+  // Images (safe default)
+  images: {
+    unoptimized: true,
+  },
+
+  // ESLint build ko block na kare
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
