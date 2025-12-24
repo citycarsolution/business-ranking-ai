@@ -1,8 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Optional global polish */
-body {
-  @apply bg-gray-50 text-gray-900;
+html {
+  background: red !important;
 }
