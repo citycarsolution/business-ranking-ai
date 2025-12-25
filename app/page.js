@@ -114,7 +114,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* FREE VS PAID (SEO CONTENT BLOCK) */}
+        {/* FREE VS PAID */}
         <section className="mt-12 border-t pt-8">
           <h2 className="text-2xl font-bold text-center mb-6">
             Free vs Paid SEO Support
@@ -157,7 +157,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* SEO FOOTER CONTENT */}
+        {/* SEO FOOTER */}
         <footer className="mt-12 text-xs text-center text-gray-500 leading-relaxed">
           Business Ranking AI helps business owners understand Google ranking,
           SEO issues, website visibility, and growth opportunities.
