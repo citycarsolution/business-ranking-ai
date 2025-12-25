@@ -1,110 +1,96 @@
 "use client";
 
-import { useState } from "react";
-import { calculateScore, calculateRisk } from "@/app/lib/score";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
-export default function Dashboard() {
-  const [email, setEmail] = useState("");
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
+export default function DashboardPage() {
+  const [status, setStatus] = useState("loading");
+  const [user, setUser] = useState(null);
 
-  const check = async () => {
-    setError("");
-    setData(null);
+  useEffect(() => {
+    // fake fetch (replace later with real API)
+    setTimeout(() => {
+      setUser({
+        email: "user@example.com",
+        plan: "pro",
+        expires: "2025-02-20",
+      });
+      setStatus("active");
+    }, 800);
+  }, []);
 
-    if (!email) {
-      setError("Email required");
-      return;
-    }
-
-    const res = await fetch("/api/status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
-    });
-
-    const d = await res.json();
-    setData(d);
-  };
-
-  const daysLeft =
-    data?.expiresAt
-      ? Math.ceil((data.expiresAt - Date.now()) / 86400000)
-      : 0;
-
-  const score = data?.actions ? calculateScore(data.actions.length) : 0;
-  const risk = data?.actions ? calculateRisk(data.actions.length) : "";
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-lg">
+        Loading dashboard...
+      </div>
+    );
+  }
 
   return (
-    <main className="max-w-3xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-1">SEO Dashboard</h1>
-      <p className="text-gray-600 mb-6">
-        Monitor your business visibility & SEO health
-      </p>
+    <main className="min-h-screen bg-gray-50 px-4 py-16">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
 
-      <input
-        className="border px-4 py-3 w-full rounded"
-        placeholder="Enter your payment email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      />
+        {/* HEADER */}
+        <h1 className="text-3xl font-bold mb-2">
+          SEO Dashboard
+        </h1>
 
-      {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+        <p className="text-gray-600 mb-6">
+          Welcome back, <span className="font-semibold">{user.email}</span>
+        </p>
 
-      <button
-        onClick={check}
-        className="mt-4 bg-black text-white px-6 py-3 rounded"
-      >
-        Check Status
-      </button>
-
-      {data && data.status !== "active" && (
-        <div className="mt-6 bg-red-100 border p-4 rounded">
-          ❌ SEO support not active.
-          <a href="/upgrade" className="ml-2 underline font-semibold">
-            Upgrade now
-          </a>
+        {/* STATUS */}
+        <div className="bg-green-50 border border-green-300 rounded-lg p-4 mb-6">
+          <p className="font-semibold text-green-700">
+            ✅ Plan Active: {user.plan.toUpperCase()}
+          </p>
+          <p className="text-sm text-green-700">
+            Valid till: {user.expires}
+          </p>
         </div>
-      )}
 
-      {data && data.status === "active" && (
-        <div className="mt-8 space-y-6">
-
-          <div className="border p-5 rounded bg-gray-50">
-            <p><b>Status:</b> ACTIVE</p>
-            <p><b>Days Left:</b> {daysLeft}</p>
-            <p><b>SEO Score:</b> {score} / 100</p>
-            <p><b>SEO Risk:</b> {risk}</p>
+        {/* FEATURES */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="border rounded-lg p-5">
+            <h3 className="font-semibold mb-2">SEO Health</h3>
+            <p className="text-gray-600 text-sm">
+              Your website has good on-page SEO but needs better keyword focus.
+            </p>
           </div>
 
-          {daysLeft <= 7 && (
-            <div className="bg-yellow-100 border p-4 rounded">
-              ⚠️ SEO support expires in {daysLeft} days.
-              <a href="/upgrade" className="ml-2 underline font-semibold">
-                Renew now
-              </a>
-            </div>
-          )}
-
-          <div>
-            <h2 className="text-xl font-bold mb-3">
-              🔧 Action Plan
-            </h2>
-
-            {data.actions.map((a, i) => (
-              <div key={i} className="bg-gray-100 p-4 rounded mb-3">
-                <p className="font-semibold">{i + 1}. {a.title}</p>
-                <p className="text-sm text-gray-700">{a.detail}</p>
-              </div>
-            ))}
+          <div className="border rounded-lg p-5">
+            <h3 className="font-semibold mb-2">Keyword Ranking</h3>
+            <p className="text-gray-600 text-sm">
+              12 keywords ranking on page 2–3. Push needed to reach top 10.
+            </p>
           </div>
 
-        </div>
-      )}
+          <div className="border rounded-lg p-5">
+            <h3 className="font-semibold mb-2">Content Suggestions</h3>
+            <p className="text-gray-600 text-sm">
+              Add 2 city pages and improve internal linking.
+            </p>
+          </div>
 
-      <p className="mt-10 text-xs text-center text-gray-500">
-        Manual review · No auto billing · Business-safe SEO
-      </p>
+          <div className="border rounded-lg p-5">
+            <h3 className="font-semibold mb-2">Backlink Status</h3>
+            <p className="text-gray-600 text-sm">
+              Low authority backlinks detected. Guest post recommended.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center">
+          <Link
+            href="/upgrade"
+            className="inline-block bg-black text-white px-6 py-3 rounded-lg"
+          >
+            Upgrade Plan
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
