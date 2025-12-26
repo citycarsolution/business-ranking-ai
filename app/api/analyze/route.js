@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
+import { analyzeWebsite } from "@/lib/ai/analyzer";
+import { shouldUseGemini } from "@/lib/ai/decision";
+import { getGeminiResponse } from "@/lib/ai/gemini";
 
 export async function POST(req) {
-  const { url, keywords } = await req.json();
+  const body = await req.json();
+
+  const analysis = analyzeWebsite(body);
+
+  let aiMessage = null;
+
+  if (shouldUseGemini(analysis)) {
+    aiMessage = await getGeminiResponse(analysis.issues);
+  }
 
   return NextResponse.json({
-    insights: [
-      `Website checked: ${url}`,
-      `Keywords analyzed: ${keywords.length}`,
-      "Your SEO basics are okay",
-      "Content optimization recommended",
-      "Backlinks need improvement"
-    ]
+    score: analysis.score,
+    issues: analysis.issues,
+    aiMessage,
   });
 }

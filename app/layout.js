@@ -10,6 +10,7 @@ export const metadata = {
   title: "Business Ranking AI – Check Your Google Visibility",
   description:
     "Free tool to check business ranking, SEO health, and Google visibility. Actionable insights for business owners.",
+
   keywords: [
     "business ranking",
     "seo checker",
@@ -19,7 +20,9 @@ export const metadata = {
     "local seo tool",
     "business seo analysis",
   ],
+
   metadataBase: new URL("https://business-ranking-ai.vercel.app"),
+
   openGraph: {
     title: "Business Ranking AI",
     description: "Check why your business is not ranking on Google.",
@@ -28,6 +31,7 @@ export const metadata = {
     locale: "en_IN",
     type: "website",
   },
+
   robots: {
     index: true,
     follow: true,
@@ -37,7 +41,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+      </body>
     </html>
   );
 }
