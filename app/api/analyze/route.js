@@ -1,22 +1,35 @@
 import { NextResponse } from "next/server";
-import { analyzeWebsite } from "@/app/lib/ai/analyzer";
-import { shouldUseGemini } from "@/app/lib/ai/decision";
-import { getGeminiResponse } from "@/app/lib/ai/gemini";
+
+// ✅ Correct relative imports (NO alias issues)
+import { analyzeWebsite } from "../../lib/ai/analyzer";
+import { shouldUseGemini } from "../../lib/ai/decision";
+import { getGeminiResponse } from "../../lib/ai/gemini";
 
 export async function POST(req) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const analysis = analyzeWebsite(body);
+    const analysis = analyzeWebsite(body);
 
-  let aiMessage = null;
+    let aiMessage = null;
 
-  if (shouldUseGemini(analysis)) {
-    aiMessage = await getGeminiResponse(analysis.issues);
+    if (shouldUseGemini(analysis)) {
+      aiMessage = await getGeminiResponse(analysis.issues);
+    }
+
+    return NextResponse.json({
+      success: true,
+      score: analysis.score,
+      issues: analysis.issues,
+      aiMessage,
+    });
+
+  } catch (error) {
+    console.error("API ERROR:", error);
+
+    return NextResponse.json(
+      { success: false, error: "Something went wrong" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json({
-    score: analysis.score,
-    issues: analysis.issues,
-    aiMessage,
-  });
 }

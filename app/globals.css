@@ -2,5 +2,5 @@
 @tailwind components;
 @tailwind utilities;
 html {
-  background: red !important;
+  background: rgb(255, 251, 251) !important;
 }
