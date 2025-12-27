@@ -1,40 +1,43 @@
 "use client";
+
 import { useState } from "react";
 
 export default function HomePage() {
   const [url, setUrl] = useState("");
   const [keywords, setKeywords] = useState("");
   const [result, setResult] = useState(null);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = async () => {
+  const handleAnalyze = async () => {
     setError("");
     setResult(null);
 
-    const keywordList = keywords
-      .split("\n")
-      .map(k => k.trim())
-      .filter(Boolean);
-
-    if (!url) return setError("Website URL required");
-    if (keywordList.length === 0) return setError("Enter at least 1 keyword");
+    if (!url) {
+      setError("Please enter website URL");
+      return;
+    }
 
     setLoading(true);
 
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           url,
-          keywords: keywordList
+          keywords: keywords
+            .split("\n")
+            .map(k => k.trim())
+            .filter(Boolean),
         }),
       });
 
       const data = await res.json();
       setResult(data);
-    } catch {
+    } catch (err) {
       setError("Something went wrong");
     }
 
@@ -42,45 +45,56 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
+    <main className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
 
-        <h1 className="text-3xl font-bold text-center">
+        <h1 className="text-3xl font-bold text-center mb-4">
           Free Business Ranking & SEO Checker
         </h1>
 
         <input
-          className="w-full border p-3 mt-4"
-          placeholder="Website URL"
+          type="text"
+          placeholder="Enter website URL"
+          className="w-full border p-3 mb-3"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
         />
 
         <textarea
-          className="w-full border p-3 mt-3"
-          rows="4"
           placeholder="Enter keywords (one per line)"
+          className="w-full border p-3 mb-3"
+          rows={4}
           value={keywords}
           onChange={(e) => setKeywords(e.target.value)}
         />
 
-        {error && <p className="text-red-500 mt-2">{error}</p>}
+        {error && <p className="text-red-600">{error}</p>}
 
         <button
-          onClick={handleSubmit}
-          className="mt-4 w-full bg-black text-white py-3 rounded"
+          onClick={handleAnalyze}
+          className="w-full bg-black text-white py-3 rounded mt-3"
         >
           {loading ? "Analyzing..." : "Check Business Ranking"}
         </button>
 
         {result && (
           <div className="mt-6">
-            <h3 className="font-bold mb-2">SEO Insights</h3>
+            <h2 className="text-xl font-semibold mb-2">
+              SEO Score: {result.score}
+            </h2>
+
             <ul className="list-disc pl-5">
-              {result.insights.map((i, idx) => (
-                <li key={idx}>{i}</li>
+              {result.insights?.map((item, i) => (
+                <li key={i}>{item}</li>
               ))}
             </ul>
+
+            {result.aiMessage && (
+              <div className="mt-4 p-4 bg-gray-100 rounded">
+                <strong>AI Suggestion:</strong>
+                <p>{result.aiMessage}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
