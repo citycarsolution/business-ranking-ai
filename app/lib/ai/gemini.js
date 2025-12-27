@@ -7,12 +7,9 @@ export async function getGeminiResponse(issues) {
 
   const prompt = `
 You are an SEO expert.
-Explain these problems in simple Hinglish and give easy solutions.
+Explain these problems in simple Hinglish and give improvement tips:
 
-Problems:
-${issues.map(i => "- " + i).join("\n")}
-
-Give practical SEO tips.
+${issues.join(", ")}
 `;
 
   const result = await model.generateContent(prompt);

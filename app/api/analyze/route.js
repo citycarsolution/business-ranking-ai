@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-
-// ✅ Correct relative imports (NO alias issues)
-import { analyzeWebsite } from "../../lib/ai/analyzer";
-import { shouldUseGemini } from "../../lib/ai/decision";
-import { getGeminiResponse } from "../../lib/ai/gemini";
+import { analyzeWebsite } from "@/app/lib/ai/analyzer";
+import { shouldUseGemini } from "@/app/lib/ai/decision";
+import { getGeminiResponse } from "@/app/lib/ai/gemini";
 
 export async function POST(req) {
   try {
@@ -18,17 +16,14 @@ export async function POST(req) {
     }
 
     return NextResponse.json({
-      success: true,
       score: analysis.score,
-      issues: analysis.issues,
-      aiMessage,
+      issues: analysis.issues || [],
+      aiMessage: aiMessage || null,
     });
 
   } catch (error) {
-    console.error("API ERROR:", error);
-
     return NextResponse.json(
-      { success: false, error: "Something went wrong" },
+      { error: "Analysis failed" },
       { status: 500 }
     );
   }
