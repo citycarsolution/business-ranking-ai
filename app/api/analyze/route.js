@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { analyzeWebsite } from "@/lib/ai/analyzer";
-import { shouldUseGemini } from "@/lib/ai/decision";
-import { getGeminiResponse } from "@/lib/ai/gemini";
+import { analyzeWebsite } from "@/app/lib/ai/analyzer";
+import { shouldUseGemini } from "@/app/lib/ai/decision";
+import { getGeminiResponse } from "@/app/lib/ai/gemini";
 
 export async function POST(req) {
   const body = await req.json();
