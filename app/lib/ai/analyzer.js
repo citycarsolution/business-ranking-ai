@@ -1,34 +1,73 @@
-export function analyzeWebsite(data) {
+import * as cheerio from "cheerio";
+
+export async function analyzeWebsite(data) {
+  const url = data.url;
   let score = 100;
   let issues = [];
 
-  if (!data.url) {
-    issues.push("Website URL missing");
-    score -= 20;
-  }
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; SEOChecker/1.0; +https://yourdomain.com)",
+      },
+    });
 
-  if (!data.keywords || data.keywords.length === 0) {
-    issues.push("No keywords provided");
-    score -= 15;
-  }
+    if (!res.ok) {
+      return {
+        score: 0,
+        issues: ["Website not reachable or blocked"],
+      };
+    }
 
-  if (!data.metaDescription) {
-    issues.push("Meta description missing");
-    score -= 10;
-  }
+    const html = await res.text();
+    const $ = cheerio.load(html);
 
-  if (!data.h1) {
-    issues.push("H1 tag missing");
-    score -= 10;
-  }
+    // Title
+    const title = $("title").text();
+    if (!title) {
+      issues.push("Missing <title> tag");
+      score -= 10;
+    }
 
-  if (data.wordCount && data.wordCount < 600) {
-    issues.push("Content too short (less than 600 words)");
-    score -= 15;
-  }
+    // Meta Description
+    const metaDesc = $('meta[name="description"]').attr("content");
+    if (!metaDesc) {
+      issues.push("Missing meta description");
+      score -= 10;
+    }
 
-  return {
-    score: Math.max(score, 0),
-    issues,
-  };
+    // H1
+    const h1 = $("h1").first().text();
+    if (!h1) {
+      issues.push("Missing H1 tag");
+      score -= 10;
+    }
+
+    // Word count
+    const text = $("body").text().replace(/\s+/g, " ").trim();
+    const wordCount = text.split(" ").length;
+    if (wordCount < 500) {
+      issues.push("Content too short (less than 500 words)");
+      score -= 15;
+    }
+
+    // Images without ALT
+    const images = $("img");
+    const imagesWithoutAlt = images.filter((i, el) => !$(el).attr("alt")).length;
+    if (imagesWithoutAlt > 0) {
+      issues.push(`${imagesWithoutAlt} images missing alt text`);
+      score -= 10;
+    }
+
+    return {
+      score: Math.max(score, 0),
+      issues,
+    };
+  } catch (error) {
+    return {
+      score: 0,
+      issues: ["Failed to analyze website"],
+    };
+  }
 }

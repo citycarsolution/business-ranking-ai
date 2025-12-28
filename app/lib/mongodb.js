@@ -3,14 +3,17 @@ import { MongoClient } from "mongodb";
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error("Please add MONGODB_URI to .env.local");
+  throw new Error("❌ MONGODB_URI is missing in environment variables");
 }
 
 let client;
 let clientPromise;
 
+// Prevent multiple connections in dev (hot reload issue)
 if (!global._mongoClientPromise) {
-  client = new MongoClient(uri);
+  client = new MongoClient(uri, {
+    maxPoolSize: 10,
+  });
   global._mongoClientPromise = client.connect();
 }
 

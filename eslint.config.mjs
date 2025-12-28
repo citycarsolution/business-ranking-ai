@@ -1,16 +1,31 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
+import next from "eslint-config-next";
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  // Override default ignores of eslint-config-next.
+export default defineConfig([
+  ...next.coreWebVitals,
+
+  // Ignore build & system files
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
+    "node_modules/**",
     "next-env.d.ts",
   ]),
-]);
 
-export default eslintConfig;
+  {
+    rules: {
+      // Allow console in dev
+      "no-console": "off",
+
+      // Prevent unused vars error in dev
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+
+      // React specific
+      "react/react-in-jsx-scope": "off",
+
+      // Next.js specific
+      "@next/next/no-img-element": "off",
+    },
+  },
+]);

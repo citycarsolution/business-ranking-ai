@@ -1,6 +1,110 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===============================
+   ROOT VARIABLES
+================================ */
+:root {
+  --bg-main: #070b1a;
+  --text-main: #ffffff;
+  --card-bg: #0f172a;
+  --border-soft: rgba(255, 255, 255, 0.1);
+  --primary: #22d3ee;
+  --secondary: #a855f7;
+}
+
+/* ===============================
+   BASE STYLES
+================================ */
 html {
-  background: rgb(255, 251, 251) !important;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: "Inter", sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===============================
+   SCROLLBAR (MODERN)
+================================ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #22d3ee, #a855f7);
+  border-radius: 6px;
+}
+
+/* ===============================
+   COMMON UI UTILITIES
+================================ */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-soft);
+}
+
+.btn-primary {
+  @apply px-5 py-3 rounded-lg font-semibold transition;
+  background: linear-gradient(to right, #22d3ee, #a855f7);
+  color: black;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.card {
+  @apply rounded-xl p-6 border;
+  background: var(--card-bg);
+  border-color: var(--border-soft);
+}
+
+/* ===============================
+   ANIMATIONS
+================================ */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* ===============================
+   TEXT SELECTION
+================================ */
+::selection {
+  background: #22d3ee;
+  color: black;
 }

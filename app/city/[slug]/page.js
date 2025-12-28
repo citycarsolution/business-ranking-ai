@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 /**
- * City data (easy to extend later)
+ * City SEO Data
  */
 const CITY_DATA = {
   mumbai: {
@@ -12,17 +12,17 @@ const CITY_DATA = {
   delhi: {
     name: "Delhi",
     description:
-      "Analyze your business ranking in Delhi. Get insights on SEO health, Google ranking, and keyword performance for Delhi-based businesses.",
+      "Analyze your business ranking in Delhi. Get insights on SEO health and keyword performance.",
   },
   pune: {
     name: "Pune",
     description:
-      "Business ranking checker for Pune. Understand how your website performs on Google and improve local SEO visibility in Pune.",
+      "Business ranking checker for Pune. Improve your local SEO visibility and Google presence.",
   },
   bangalore: {
     name: "Bangalore",
     description:
-      "Check Google business ranking in Bangalore. SEO insights for startups and local businesses in Bangalore.",
+      "Check Google business ranking in Bangalore. SEO insights for startups and local businesses.",
   },
   hyderabad: {
     name: "Hyderabad",
@@ -32,20 +32,21 @@ const CITY_DATA = {
 };
 
 /**
- * REQUIRED FOR STATIC BUILD (CRITICAL)
+ * Static generation for SEO
  */
 export function generateStaticParams() {
   return Object.keys(CITY_DATA).map((slug) => ({ slug }));
 }
 
 /**
- * SEO METADATA
+ * SEO Metadata
  */
-export async function generateMetadata({ params }) {
+export function generateMetadata({ params }) {
   const city = CITY_DATA[params.slug];
 
   if (!city) {
     return {
+      title: "Page Not Found",
       robots: { index: false, follow: false },
     };
   }
@@ -53,13 +54,16 @@ export async function generateMetadata({ params }) {
   return {
     title: `Business Ranking in ${city.name} | Business Ranking AI`,
     description: city.description,
+    alternates: {
+      canonical: `https://business-ranking-ai.vercel.app/city/${params.slug}`,
+    },
     openGraph: {
       title: `Business Ranking in ${city.name}`,
       description: city.description,
       url: `https://business-ranking-ai.vercel.app/city/${params.slug}`,
       siteName: "Business Ranking AI",
-      locale: "en_IN",
       type: "website",
+      locale: "en_IN",
     },
     robots: {
       index: true,
@@ -73,12 +77,11 @@ export async function generateMetadata({ params }) {
  */
 export default function CityPage({ params }) {
   const city = CITY_DATA[params.slug];
-
   if (!city) notFound();
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-12">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+      <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-md p-8">
 
         <h1 className="text-3xl md:text-4xl font-bold">
           Business Ranking in {city.name}
@@ -88,47 +91,46 @@ export default function CityPage({ params }) {
           {city.description}
         </p>
 
-        <div className="mt-6 grid md:grid-cols-2 gap-4">
-          <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">Local SEO Insights</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Understand how your business performs in local Google searches in{" "}
-              {city.name}.
-            </p>
-          </div>
-
-          <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">Keyword Ranking Analysis</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Track important keywords and understand ranking gaps.
-            </p>
-          </div>
-
-          <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">SEO Recommendations</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Actionable steps to improve on-page, off-page, and technical SEO.
-            </p>
-          </div>
-
-          <div className="border rounded-xl p-4">
-            <h2 className="font-semibold text-lg">Free + Paid Growth Path</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Start free, then unlock deeper insights if needed.
-            </p>
-          </div>
-        </div>
+        <section className="grid md:grid-cols-2 gap-6 mt-8">
+          <Feature
+            title="Local SEO Insights"
+            desc={`Understand how your business performs in ${city.name} searches and map results.`}
+          />
+          <Feature
+            title="Keyword Ranking Analysis"
+            desc="Track keyword movement and identify ranking opportunities."
+          />
+          <Feature
+            title="SEO Recommendations"
+            desc="Actionable steps to improve on-page, technical, and off-page SEO."
+          />
+          <Feature
+            title="Free + Paid Growth Path"
+            desc="Start free and unlock advanced SEO insights anytime."
+          />
+        </section>
 
         <div className="mt-10 text-center">
           <a
             href="/"
-            className="inline-block bg-black text-white px-6 py-3 rounded-lg font-semibold"
+            className="inline-block bg-black text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90"
           >
-            Check Your Business Ranking Now →
+            Check Your Business Ranking →
           </a>
         </div>
-
       </div>
     </main>
+  );
+}
+
+/**
+ * Reusable Card Component
+ */
+function Feature({ title, desc }) {
+  return (
+    <div className="border rounded-xl p-5 hover:shadow transition">
+      <h3 className="font-semibold text-lg">{title}</h3>
+      <p className="mt-2 text-gray-600">{desc}</p>
+    </div>
   );
 }

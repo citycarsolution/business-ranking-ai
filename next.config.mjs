@@ -2,14 +2,28 @@
 const nextConfig = {
   reactStrictMode: true,
 
-  // Images (safe default)
+  // Image optimization
   images: {
     unoptimized: true,
   },
 
-  // ESLint build ko block na kare
+  // ESLint should not break production builds
   eslint: {
     ignoreDuringBuilds: true,
+  },
+
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
   },
 };
 
