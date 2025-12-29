@@ -1,3 +1,4 @@
+import axios from "axios";
 import * as cheerio from "cheerio";
 
 export async function analyzeWebsite({ url, keywords }) {
@@ -5,53 +6,59 @@ export async function analyzeWebsite({ url, keywords }) {
   let issues = [];
 
   try {
-    const res = await fetch(url);
-    const html = await res.text();
+    const response = await axios.get(url, {
+      timeout: 10000,
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
+
+    const html = response.data;
     const $ = cheerio.load(html);
 
-    const title = $("title").text();
-    const metaDesc = $('meta[name="description"]').attr("content");
-    const h1 = $("h1").first().text();
-    const text = $("body").text();
-
     // TITLE
+    const title = $("title").text();
     if (!title) {
-      issues.push("Missing title tag");
+      issues.push("Missing <title> tag");
       score -= 15;
     }
 
     // META DESCRIPTION
+    const metaDesc = $('meta[name="description"]').attr("content");
     if (!metaDesc) {
-      issues.push("Missing meta description");
-      score -= 15;
-    }
-
-    // H1
-    if (!h1) {
-      issues.push("Missing H1 heading");
+      issues.push("Meta description missing");
       score -= 10;
     }
 
+    // H1
+    const h1 = $("h1").first().text();
+    if (!h1) {
+      issues.push("Missing H1 tag");
+      score -= 10;
+    }
+
+    // WORD COUNT
+    const text = $("body").text();
+    const words = text.split(/\s+/).length;
+    if (words < 300) {
+      issues.push("Low content length (less than 300 words)");
+      score -= 15;
+    }
+
     // KEYWORDS CHECK
-    if (keywords?.length > 0) {
+    if (keywords && keywords.length > 0) {
       const content = text.toLowerCase();
       keywords.forEach((kw) => {
         if (!content.includes(kw.toLowerCase())) {
-          issues.push(`Keyword not found: ${kw}`);
+          issues.push(`Keyword not found: "${kw}"`);
           score -= 5;
         }
       });
     }
 
-    // CONTENT LENGTH
-    if (text.length < 600) {
-      issues.push("Content too short (less than 600 characters)");
-      score -= 10;
-    }
-
   } catch (err) {
-    issues.push("Unable to fetch website content");
-    score -= 30;
+    issues.push("Website not reachable or blocked");
+    score = 0;
   }
 
   return {
