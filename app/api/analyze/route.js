@@ -3,11 +3,10 @@ import { analyzeWebsite } from "@/app/lib/ai/analyzer";
 import { shouldUseGemini } from "@/app/lib/ai/decision";
 import { getGeminiResponse } from "@/app/lib/ai/gemini";
 
-// IMPORTANT: Force runtime execution (avoid static build crash)
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// 🔒 URL validation
+// Validate URL
 function isValidURL(url) {
   try {
     const u = new URL(url);
@@ -17,7 +16,7 @@ function isValidURL(url) {
   }
 }
 
-// 🔒 Block fake / local URLs
+// Block local URLs
 function isBlockedURL(url) {
   return (
     url.includes("localhost") ||
@@ -45,18 +44,17 @@ export async function POST(req) {
       );
     }
 
-    // 🧠 Analyze website
-    const analysis = analyzeWebsite(body);
+    // ✅ FIXED HERE
+    const analysis = await analyzeWebsite(body);
 
     let aiMessage = null;
-
     if (shouldUseGemini(analysis)) {
       aiMessage = await getGeminiResponse(analysis.issues);
     }
 
     return NextResponse.json({
       score: analysis.score,
-      issues: analysis.issues || [],
+      issues: analysis.issues,
       aiMessage,
     });
 
