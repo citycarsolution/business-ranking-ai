@@ -1,4 +1,4 @@
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 
 export async function analyzeWebsite({ url, keywords }) {
   let score = 100;
