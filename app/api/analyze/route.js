@@ -1,29 +1,4 @@
-import { NextResponse } from "next/server";
-import { analyzeWebsite } from "@/app/lib/ai/analyzer";
-import { shouldUseGemini } from "@/app/lib/ai/decision";
-import { getGeminiResponse } from "@/app/lib/ai/gemini";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
-// Validate URL
-function isValidURL(url) {
-  try {
-    const u = new URL(url);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-// Block local URLs
-function isBlockedURL(url) {
-  return (
-    url.includes("localhost") ||
-    url.includes("127.0.0.1") ||
-    url.includes("192.168")
-  );
-}
+// 🔥 FIXED VERSION
 
 export async function POST(req) {
   try {
@@ -31,23 +6,21 @@ export async function POST(req) {
     const { url } = body;
 
     if (!url || !isValidURL(url)) {
-      return NextResponse.json(
-        { error: "Invalid website URL" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
 
     if (isBlockedURL(url)) {
       return NextResponse.json(
-        { error: "Local or private URLs are not allowed" },
+        { error: "Local URLs not allowed" },
         { status: 400 }
       );
     }
 
-    // ✅ FIXED HERE
+    // ✅ FIX HERE
     const analysis = await analyzeWebsite(body);
 
     let aiMessage = null;
+
     if (shouldUseGemini(analysis)) {
       aiMessage = await getGeminiResponse(analysis.issues);
     }
@@ -58,8 +31,8 @@ export async function POST(req) {
       aiMessage,
     });
 
-  } catch (error) {
-    console.error("Analyze API Error:", error);
+  } catch (err) {
+    console.error(err);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
