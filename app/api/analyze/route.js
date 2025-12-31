@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyzeWebsite } from "@/app/lib/ai/analyzer";
 import { shouldUseGemini } from "@/app/lib/ai/decision";
-import { getGeminiResponse } from "@/app/lib/ai/gemini";
+import { getGroqResponse } from "@/app/lib/ai/groq";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +12,10 @@ export async function POST(req) {
     const { url, keywords } = body;
 
     if (!url) {
-      return NextResponse.json({ error: "URL missing" }, { status: 400 });
+      return NextResponse.json(
+        { error: "URL is required" },
+        { status: 400 }
+      );
     }
 
     const analysis = await analyzeWebsite({ url, keywords });
@@ -20,7 +23,7 @@ export async function POST(req) {
     let aiMessage = null;
 
     if (shouldUseGemini(analysis)) {
-      aiMessage = await getGeminiResponse(analysis.issues);
+      aiMessage = await getGroqResponse(analysis.issues);
     }
 
     return NextResponse.json({
@@ -28,6 +31,7 @@ export async function POST(req) {
       issues: analysis.issues,
       aiMessage,
     });
+
   } catch (error) {
     console.error("API ERROR:", error);
     return NextResponse.json(
