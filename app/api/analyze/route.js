@@ -1,23 +1,21 @@
-// 🔥 FIXED VERSION
+import { NextResponse } from "next/server";
+import { analyzeWebsite } from "@/app/lib/ai/analyzer";
+import { shouldUseGemini } from "@/app/lib/ai/decision";
+import { getGeminiResponse } from "@/app/lib/ai/gemini";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { url } = body;
+    const { url, keywords } = body;
 
-    if (!url || !isValidURL(url)) {
-      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    if (!url) {
+      return NextResponse.json({ error: "URL missing" }, { status: 400 });
     }
 
-    if (isBlockedURL(url)) {
-      return NextResponse.json(
-        { error: "Local URLs not allowed" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ FIX HERE
-    const analysis = await analyzeWebsite(body);
+    const analysis = await analyzeWebsite({ url, keywords });
 
     let aiMessage = null;
 
@@ -30,11 +28,10 @@ export async function POST(req) {
       issues: analysis.issues,
       aiMessage,
     });
-
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error("API ERROR:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
