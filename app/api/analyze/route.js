@@ -11,19 +11,20 @@ export async function POST(req) {
     const body = await req.json();
     const { url, keywords } = body;
 
-    if (!url) {
+    if (!url || typeof url !== "string") {
       return NextResponse.json(
-        { error: "URL is required" },
+        { error: "Valid URL is required" },
         { status: 400 }
       );
     }
 
+    // Run SEO analysis
     const analysis = await analyzeWebsite({ url, keywords });
 
     let aiMessage = null;
 
     if (shouldUseGemini(analysis)) {
-      aiMessage = await getGroqResponse(analysis.issues);
+      aiMessage = await getGroqResponse(analysis.issues); 
     }
 
     return NextResponse.json({
