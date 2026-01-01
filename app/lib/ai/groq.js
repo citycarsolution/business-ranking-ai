@@ -1,10 +1,8 @@
 import Groq from "groq-sdk";
 
-export async function getGroqResponse(prompt) {
-  // ✅ SAFE GUARD (important)
+export async function getGroqResponse(issues) {
   if (!process.env.GROQ_API_KEY) {
-    console.warn("⚠️ GROQ_API_KEY missing – skipping AI call");
-    return "AI temporarily unavailable.";
+    return "AI is currently unavailable.";
   }
 
   const groq = new Groq({
@@ -12,8 +10,13 @@ export async function getGroqResponse(prompt) {
   });
 
   const completion = await groq.chat.completions.create({
-    model: "llama3-70b-8192",
-    messages: [{ role: "user", content: prompt }],
+    model: "llama3-8b-8192",
+    messages: [
+      {
+        role: "user",
+        content: `Give SEO improvement suggestions for: ${issues.join(", ")}`
+      }
+    ],
   });
 
   return completion.choices[0].message.content;

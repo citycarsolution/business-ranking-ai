@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { analyzeWebsite } from "@/app/lib/ai/analyzer";
-import { shouldUseGemini } from "@/app/lib/ai/decision";
+import { shouldUseAI } from "@/app/lib/ai/aiDecision";
 import { getGroqResponse } from "@/app/lib/ai/groq";
 
 export const runtime = "nodejs";
@@ -8,23 +8,22 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { url, keywords } = body;
+    const { url, keywords } = await req.json();
 
-    if (!url || typeof url !== "string") {
-      return NextResponse.json(
-        { error: "Valid URL is required" },
-        { status: 400 }
-      );
+    if (!url) {
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    // Run SEO analysis
     const analysis = await analyzeWebsite({ url, keywords });
 
     let aiMessage = null;
 
-    if (shouldUseGemini(analysis)) {
-      aiMessage = await getGroqResponse(analysis.issues); 
+    if (shouldUseAI(analysis)) {
+      if (process.env.GROQ_API_KEY) {
+        aiMessage = await getGroqResponse(analysis.issues);
+      } else {
+        aiMessage = "AI temporarily unavailable.";
+      }
     }
 
     return NextResponse.json({
@@ -32,11 +31,9 @@ export async function POST(req) {
       issues: analysis.issues,
       aiMessage,
     });
-
   } catch (error) {
-    console.error("API ERROR:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error.message },
       { status: 500 }
     );
   }
