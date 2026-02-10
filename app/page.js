@@ -1,132 +1,139 @@
 "use client";
 
 import { useState } from "react";
+import ScoreBar from "@/app/components/ScoreBar";
+import LockedSection from "@/app/components/LockedSection";
+import PricingSection from "@/app/components/PricingSection";
 
-export default function Home() {
+
+export default function HomePage() {
   const [url, setUrl] = useState("");
   const [keywords, setKeywords] = useState("");
-  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [result, setResult] = useState(null);
 
-  // URL validation
-  const isValidURL = (url) => {
-    try {
-      const u = new URL(url);
-      return u.protocol === "http:" || u.protocol === "https:";
-    } catch {
-      return false;
+  const handleAnalyze = async () => {
+    if (!url) {
+      setError("URL is required");
+      return;
     }
-  };
-
-  const isBlocked = (url) =>
-    url.includes("localhost") ||
-    url.includes("127.0.0.1") ||
-    url.includes("192.168");
-
-  const handleSubmit = async () => {
-    setError("");
-    setResult(null);
-
-    if (!url) return setError("❌ Please enter a website URL");
-    if (!isValidURL(url))
-      return setError("❌ Enter a valid URL (https://example.com)");
-    if (isBlocked(url))
-      return setError("❌ Local or private URLs are not allowed");
 
     setLoading(true);
+    setError("");
+    setResult(null);
 
     try {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url,
-          keywords: keywords
-            .split("\n")
-            .map(k => k.trim())
-            .filter(Boolean),
-        }),
+        body: JSON.stringify({ url, keywords }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error("Analysis failed");
-
-      setResult(data);
-    } catch (err) {
-      setError("⚠️ Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
+      if (!res.ok) {
+        setError(data.error || "Analysis failed");
+      } else {
+        setResult(data);
+      }
+    } catch (e) {
+      setError("Server not responding");
     }
+
+    setLoading(false);
   };
 
   return (
-    <main className="min-h-screen bg-[#070b1a] text-white flex justify-center px-4 py-16">
-      <div className="w-full max-w-2xl">
+    <main className="min-h-screen bg-[#050817] text-white flex justify-center pt-10">
+      <div className="w-[95%] max-w-6xl rounded-2xl bg-gradient-to-b from-[#0b0f25] to-[#050817] border border-white/10 shadow-[0_0_60px_#3b82f640] p-6">
 
-        {/* Header */}
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-3">
-          AI Business SEO Checker 🚀
-        </h1>
+        {/* NAVBAR */}
+        <div className="flex justify-between items-center mb-14 backdrop-blur bg-black/20 rounded-xl px-4 py-3 sticky top-4 z-50">
+          <div className="font-semibold flex items-center gap-2">
+            ⚡ Business Ranking AI
+          </div>
+          <button className="border border-cyan-400 text-cyan-400 px-4 py-1 rounded hover:bg-cyan-400 hover:text-black transition">
+            Login / Sign Up
+          </button>
+        </div>
 
-        <p className="text-center text-gray-400 mb-8">
-          Enter your website & get instant SEO insights powered by AI
-        </p>
+        {/* HERO */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-3">
+            Unlock Your Business Potential
+          </h1>
+          <p className="text-gray-400">
+            AI-powered SEO insights to dominate search results
+          </p>
+        </div>
 
-        {/* Input Card */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur">
+        {/* SEO FORM */}
+        <div className="mx-auto max-w-xl bg-white/10 backdrop-blur border border-white/10 rounded-xl p-6 shadow hover:shadow-cyan-500/30 transition">
 
           <input
-            type="text"
-            placeholder="https://yourwebsite.com"
-            className="w-full p-3 rounded bg-black/40 border border-gray-700 mb-3"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
+            placeholder="Enter Your Business URL"
+            className="w-full p-3 mb-3 rounded bg-black/40 border border-gray-700 focus:ring-2 focus:ring-cyan-400 outline-none"
           />
 
-          <textarea
-            rows={4}
-            placeholder="Enter keywords (one per line)"
-            className="w-full p-3 rounded bg-black/40 border border-gray-700 mb-4"
+          <input
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
+            placeholder="Enter Keywords"
+            className="w-full p-3 mb-4 rounded bg-black/40 border border-gray-700 focus:ring-2 focus:ring-cyan-400 outline-none"
           />
 
           <button
-            onClick={handleSubmit}
+            type="button"
+            onClick={handleAnalyze}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 py-3 rounded font-semibold disabled:opacity-60"
+            className="w-full py-3 rounded bg-gradient-to-r from-cyan-500 to-blue-500 font-semibold hover:scale-[1.02] transition"
           >
-            {loading ? "Analyzing..." : "Check SEO Score"}
+            {loading ? "Analyzing..." : "Check Business Ranking"}
           </button>
 
           {error && (
-            <p className="text-red-400 text-center mt-3">{error}</p>
+            <p className="text-red-400 text-sm mt-3">{error}</p>
           )}
         </div>
 
         {/* RESULT */}
         {result && (
-          <div className="mt-8 bg-white text-black p-6 rounded-xl">
-            <h3 className="text-2xl font-bold mb-3">
-              SEO Score: {result.score}/100
-            </h3>
+          <div className="mt-10 bg-black/40 p-6 rounded-xl border border-white/10">
+            <ScoreBar
+              label="Overall SEO"
+              score={result.scores.overall}
+              color="bg-green-500"
+            />
 
-            <ul className="list-disc ml-5 text-gray-700">
-              {result.issues.map((issue, i) => (
-                <li key={i}>{issue}</li>
-              ))}
-            </ul>
+            <LockedSection section="content">
+              <ScoreBar
+                label="Content SEO"
+                score={result.scores.content}
+                color="bg-purple-500"
+              />
+            </LockedSection>
 
-            {result.aiMessage && (
-              <div className="mt-4 p-4 bg-gray-100 rounded">
-                <strong>🤖 AI Recommendation:</strong>
-                <p className="mt-1">{result.aiMessage}</p>
-              </div>
-            )}
+            <LockedSection section="keyword">
+              <ScoreBar
+                label="Keyword SEO"
+                score={result.scores.keyword}
+                color="bg-yellow-500"
+              />
+            </LockedSection>
           </div>
         )}
+
+        {/* ✅ PRICING SECTION (FINAL ADD) */}
+        <PricingSection />
+
+        {/* FOOTER */}
+        <p className="text-center text-xs text-gray-500 mt-16">
+          Powered by wepaapseostudio © 2026
+        </p>
+
       </div>
     </main>
   );
