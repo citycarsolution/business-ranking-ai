@@ -1,20 +1,179 @@
+import Groq from "groq-sdk";
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+/* -------------------------
+   CLEAN HTML
+-------------------------- */
+function cleanHTML(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<\/?[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .slice(0, 5000);
+}
+
+/* -------------------------
+   SEO ENGINE
+-------------------------- */
+function calculateSEO(html, content) {
+  let onPage = 100;
+  let technical = 100;
+  const issues = [];
+
+  const hasTitle = /<title>/i.test(html);
+  const hasMeta = /meta name="description"/i.test(html);
+  const h1Count = (html.match(/<h1/gi) || []).length;
+  const wordCount = content.split(" ").length;
+  const hasSchema = html.includes("application/ld+json");
+  const hasViewport = /viewport/i.test(html);
+
+  // Basic checks
+  if (!hasTitle) {
+    onPage -= 20;
+    issues.push("Missing title tag");
+  }
+
+  if (!hasMeta) {
+    onPage -= 20;
+    issues.push("Missing meta description");
+  }
+
+  if (h1Count === 0) {
+    onPage -= 15;
+    issues.push("No H1 heading");
+  }
+
+  if (wordCount < 400) {
+    onPage -= 15;
+    issues.push("Low content depth");
+  }
+
+  if (!hasSchema) {
+    technical -= 20;
+    issues.push("No structured data schema");
+  }
+
+  if (!hasViewport) {
+    technical -= 15;
+    issues.push("Mobile optimization missing");
+  }
+
+  // Internal links
+  const internalLinks =
+    (html.match(/<a\s+href="\/(?!\/)/gi) || []).length;
+
+  if (internalLinks < 3) {
+    onPage -= 10;
+    issues.push("Weak internal linking");
+  }
+
+  // Image alt check
+  const images = (html.match(/<img/gi) || []).length;
+  const altMissing =
+    (html.match(/<img(?![^>]*alt=)[^>]*>/gi) || []).length;
+
+  if (images > 0 && altMissing > 0) {
+    technical -= 10;
+    issues.push("Images missing alt attributes");
+  }
+
+  if (onPage < 0) onPage = 0;
+  if (technical < 0) technical = 0;
+
+  const overall = Math.round(onPage * 0.6 + technical * 0.4);
+
+  return {
+    overall,
+    onPage,
+    technical,
+    local: hasSchema ? 75 : 45,
+    issues: issues.slice(0, 6),
+  };
+}
+
+/* -------------------------
+   TRAFFIC ESTIMATION
+-------------------------- */
+function estimateTrafficLoss(score, competition = "Medium") {
+  const baseSearchVolume =
+    competition === "High"
+      ? 15000
+      : competition === "Low"
+      ? 3000
+      : 8000;
+
+  const visibilityFactor = score / 100;
+  const estimatedTraffic = Math.floor(
+    baseSearchVolume * visibilityFactor * 0.2
+  );
+
+  const missedTraffic = baseSearchVolume - estimatedTraffic;
+
+  const conversionRate = 0.03;
+  const avgOrderValue = 1500;
+
+  const estimatedLeads = Math.floor(
+    missedTraffic * conversionRate
+  );
+
+  const revenueLoss = estimatedLeads * avgOrderValue;
+
+  return {
+    monthlyVisitorsLost: missedTraffic,
+    estimatedLeadsLost: estimatedLeads,
+    monthlyRevenueLoss: revenueLoss,
+  };
+}
+
+/* -------------------------
+   SAFE AI PARSE
+-------------------------- */
+function safeParseAI(text) {
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error();
+    return JSON.parse(match[0]);
+  } catch {
+    return {
+      type: "Unknown",
+      industry: "Unknown",
+      location: "Unknown",
+      competition: "Medium",
+      keywords: [],
+    };
+  }
+}
+
+/* -------------------------
+   API HANDLER
+-------------------------- */
 export async function POST(req) {
   try {
-    const { url, keywords = "" } = await req.json();
+    const { url } = await req.json();
 
-    if (!url || !url.startsWith("http")) {
-      return Response.json({ error: "Valid URL required" }, { status: 400 });
+    if (!url?.startsWith("http")) {
+      return Response.json(
+        { error: "Invalid URL" },
+        { status: 400 }
+      );
     }
 
-    /* =========================
-       A️⃣ FETCH REAL HTML
-    ========================= */
+    // Fetch with timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      8000
+    );
+
     const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (BusinessRankingAI Bot)"
-      },
-      redirect: "follow"
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     if (!res.ok) {
       return Response.json(
@@ -24,123 +183,85 @@ export async function POST(req) {
     }
 
     const html = await res.text();
-    const text = html.toLowerCase();
+    const content = cleanHTML(html);
 
-    /* =========================
-       BASIC EXTRACTION
-    ========================= */
-    const title = (html.match(/<title>(.*?)<\/title>/i)?.[1] || "").trim();
-    const h1 = (html.match(/<h1[^>]*>(.*?)<\/h1>/i)?.[1] || "").trim();
-    const metaDesc = html.match(/<meta name="description" content="(.*?)"/i)?.[1] || "";
-    const wordCount = text.split(/\s+/).length;
+    /* -------- AI BUSINESS DETECTION -------- */
+    const aiPrompt = `
+Identify business type, industry, location and competition level.
+Return ONLY valid JSON:
 
-    /* =========================
-       BUSINESS TYPE (REAL SIGNAL)
-    ========================= */
-    let businessType = "general";
-    let service = 0, ecommerce = 0, blog = 0;
+{
+  "type": "",
+  "industry": "",
+  "location": "",
+  "competition": "Low | Medium | High",
+  "keywords": []
+}
 
-    if (text.includes("cab") || text.includes("taxi")) service += 2;
-    if (text.includes("booking") || text.includes("call now")) service += 1;
+Website content:
+${content}
+`;
 
-    if (text.includes("add to cart")) ecommerce += 2;
-    if (text.includes("buy now") || text.includes("price")) ecommerce += 1;
+    const completion =
+      await groq.chat.completions.create({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          { role: "user", content: aiPrompt },
+        ],
+        temperature: 0.1,
+        max_tokens: 400,
+      });
 
-    if (text.includes("blog") || wordCount > 1200) blog += 2;
+    const aiData = safeParseAI(
+      completion.choices[0].message.content
+    );
 
-    const max = Math.max(service, ecommerce, blog);
-    if (max === service && max > 0) businessType = "local-service";
-    else if (max === ecommerce) businessType = "ecommerce";
-    else if (max === blog) businessType = "content";
+    /* -------- SEO ENGINE -------- */
+    const seo = calculateSEO(html, content);
 
-    /* =========================
-       B️⃣ CONTENT + KEYWORD SEO
-    ========================= */
-    const keywordList = keywords.toLowerCase().split(",").map(k => k.trim()).filter(Boolean);
-    let keywordScore = 0;
-    let keywordHits = [];
+    /* -------- TRAFFIC -------- */
+    const traffic = estimateTrafficLoss(
+      seo.overall,
+      aiData.competition
+    );
 
-    keywordList.forEach(k => {
-      if (title.toLowerCase().includes(k)) {
-        keywordScore += 10;
-        keywordHits.push(`Keyword "${k}" in title`);
-      }
-      if (h1.toLowerCase().includes(k)) {
-        keywordScore += 10;
-        keywordHits.push(`Keyword "${k}" in H1`);
-      }
-      if (text.includes(k)) {
-        keywordScore += 5;
-        keywordHits.push(`Keyword "${k}" in content`);
-      }
-    });
+    /* -------- PRO LOGIC -------- */
+    const criticalIssues = seo.issues.some(
+      (issue) =>
+        issue.includes("Missing title") ||
+        issue.includes("Missing meta") ||
+        issue.includes("No H1")
+    );
 
-    if (keywordScore > 30) keywordScore = 30;
+    const showPro =
+      seo.overall < 80 ||
+      criticalIssues ||
+      traffic.monthlyRevenueLoss > 15000;
 
-    /* =========================
-       C️⃣ TECHNICAL SEO (SECTION WISE)
-    ========================= */
-    const technical = {
-      title: title.length >= 15 && title.length <= 60 ? 20 : 0,
-      h1: h1.length > 5 ? 20 : 0,
-      meta: metaDesc.length >= 50 && metaDesc.length <= 160 ? 15 : 0,
-      content: wordCount > 300 ? 25 : 0,
-      links: text.includes("<a href") ? 10 : 0,
-      https: url.startsWith("https") ? 10 : 0
-    };
-
-    const technicalScore = Object.values(technical).reduce((a, b) => a + b, 0);
-
-    const issues = [];
-    if (!technical.title) issues.push("Title not optimized");
-    if (!technical.h1) issues.push("H1 missing");
-    if (!technical.meta) issues.push("Meta description missing");
-    if (!technical.content) issues.push("Low content length");
-    if (!technical.links) issues.push("No internal links");
-    if (!technical.https) issues.push("HTTPS not enabled");
-
-    /* =========================
-       D️⃣ FREE vs PAID LIMIT
-    ========================= */
-    const isFreeUser = true; // later auth se aayega
-
-    const finalScore = isFreeUser
-      ? Math.min(technicalScore + keywordScore, 60)
-      : Math.min(technicalScore + keywordScore, 100);
-
-    /* =========================
-       FINAL RESPONSE (UI READY)
-    ========================= */
     return Response.json({
       success: true,
-      url,
-      businessType,
-
-      scores: {
-        overall: finalScore,
-        technical: technicalScore,
-        keyword: keywordScore
+      business: {
+        type: aiData.type,
+        industry: aiData.industry,
+        location: aiData.location,
+        competition: aiData.competition,
       },
-
-      breakdown: {
-        technical,
-        keywordHits,
-        extracted: {
-          title,
-          h1,
-          metaDesc,
-          wordCount
-        }
+      seoScore: {
+        overall: seo.overall,
+        onPage: seo.onPage,
+        technical: seo.technical,
+        local: seo.local,
       },
-
-      issues,
-
-      plan: isFreeUser ? "FREE" : "PRO"
+      topKeywords: aiData.keywords.slice(0, 5),
+      issues: seo.issues,
+      missedTraffic: traffic,
+      showPro,
     });
 
-  } catch (e) {
+  } catch (err) {
+    console.error("SEO ANALYSIS ERROR:", err);
     return Response.json(
-      { error: "SEO analysis failed" },
+      { error: "AI analysis failed" },
       { status: 500 }
     );
   }

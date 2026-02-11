@@ -1,13 +1,20 @@
 import "./globals.css";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 export const metadata = {
-  title: "AI SEO Analyzer",
+  title: "Business Ranking AI",
+  description: "AI-powered SEO analysis for real business growth",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="bg-[#050817] text-white">
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
